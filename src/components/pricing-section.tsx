@@ -1,3 +1,4 @@
+// src/components/pricing-section.tsx
 "use client"
 
 import { useState } from "react"
@@ -7,6 +8,31 @@ type Vote = "yes" | "maybe" | "no" | null
 
 export function PricingSection() {
   const [vote, setVote] = useState<Vote>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const handleVote = async (selectedVote: Vote) => {
+    if (!selectedVote || isSubmitting) return
+
+    setIsSubmitting(true)
+    try {
+      const email = localStorage.getItem("lifekeep_lead_email")
+
+      await fetch("/api/leads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          answer: selectedVote,
+          ...(email && { email }), 
+        }),
+      })
+      
+      setVote(selectedVote)
+    } catch (error) {
+      console.error("Failed to submit vote", error)
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
 
   return (
     <section className="flex justify-center border-t border-border px-6 py-20 md:py-28">
@@ -19,30 +45,33 @@ export function PricingSection() {
             <Button
               variant="default"
               size="sm"
+              disabled={isSubmitting}
               className="min-w-20 rounded-lg text-sm"
-              onClick={() => setVote("yes")}
+              onClick={() => handleVote("yes")}
             >
               Yes
             </Button>
             <Button
               variant="secondary"
               size="sm"
+              disabled={isSubmitting}
               className="min-w-20 rounded-lg text-sm"
-              onClick={() => setVote("maybe")}
+              onClick={() => handleVote("maybe")}
             >
               Maybe
             </Button>
             <Button
               variant="secondary"
               size="sm"
+              disabled={isSubmitting}
               className="min-w-20 rounded-lg text-sm"
-              onClick={() => setVote("no")}
+              onClick={() => handleVote("no")}
             >
               No
             </Button>
           </div>
         ) : (
-          <p className="mt-8 text-sm text-muted-foreground">
+          <p className="mt-8 text-sm text-muted-foreground animate-in fade-in slide-in-from-bottom-2">
             Thanks for your feedback.
           </p>
         )}
